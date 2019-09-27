@@ -40,232 +40,197 @@ Results in 15 total columns.
 
 Now to process the data.
 
-
+------
 
 ##Extra Steps:
 
-Made directories for bother maize and teosinte, keep everything in order and store the final files.
+Made directories for both maize and teosinte, keep everything in order and store the final files.
 
 `mkdir maize` & `mkdir teosinte`
 
-
+------
 
 ##Data Processing
 
-###SNP_position 
+###Maize
+
+`grep "Group" fang_et_al_genotypes > maize_genotypes.txt`
+
+Removal of the headers in the SNP file and sent to a new file titled maize_genotypes.txt.
+
+```
+grep "ZMM[IL,LR,MR]" fang_et_al_genotypes.txt >> maize_genotypes.txt
+```
+
+Appendage of important header data to the maize_genotypes.txt file.
 
 
 
-`grep "SNP_ID" snp_position.txt > SNP_headers.txt`
+```
+awk -f transpose.awk maize_genotypes.txt > transposed_maize.txt
+```
 
-Removal of the headers in the SNP file and sent to a new file titled SNP_headers.txt
+Now we transpose the maize_genotypes.txt file, this is not stored as transposed_maize.txt.
 
+I used vi to change Sample_ID to SNP_ID so that the data can be correctly matched.
 
+```
+cut -f 1,3,4 snp_position.txt > maize_snp_position.txt
+```
 
-`cut -f 1,3,4 snp_position.txt > data_snp_position.txt`
+The command above was used to remove unimportant data, and save the important data into maize_position.txt
 
-Removes unimportant data, saving simply the chromosome and locations of nucleotides into a new file named data_snp_position.txt
+```
+join -1 1 -2 1 maize_position.txt transposed_maize_genotypes.txt > joined_maize.txt
+```
 
-##Maize:
+Now we join the files and observe. 
 
-`grep "SNP_ID" fang_et_al_genotypes.txt > maize_genotypes.txt`
-
-This command was used to remove the maize genotypes and save them separately.
-
-
-
-`grep "ZMM[IL,LR,MR]" fang_et_al_genotypes.txt >> maize_genotypes.txt`
-
-This command was used to append the groups that we are looking for the the separate file, maize_genotypes.txt.
-
-
-
-`awk -f transpose.awk maize_genotypes.txt > transposed_maize_genotypes.txt`
-
-Now, we transpose the maize_genotype.txt file and save as a new file named transposed_maize_genotypes.txt.
+Everything is looking in order so far...
 
 
 
-Now to join the files:
+Now to create files for individual chromosomes:
 
-`join -1 1 -2 1 data_snp_position.txt transposed_maize_genotypes.txt > joined_maize_genotypes.txt`
+`awk '$2 ==1' joined_maize.txt > maize_chr1.txt`
 
-Completed!
-
-
-
-Now, we move our joined files into their respective folders:
-
-`mv joined_maize_genotypes.txt maize` 
+This has created a file for the first chromosome of the maize data, now to filter it in increasing and decreasing order, and make 9 more!
 
 
 
-In this folder we will make 3 more directories for the information of Increasing and Decreasing SNP position and an extra directory for whatever else turns up.
+Sorting:
 
-`mkdir Increasing_SNP_position` `mkdir Decreasing_SNP_position`  `mkdir extras`
+```
+sort -k3,3n maize_chr1.txt > forward_maize_chr1.txt
+```
 
+Forward sort ^
 
+This can be more efficient using piping:
 
-Copied our join_maize_genotypes.txt into the respective directions based on increasing and decreasing values, while replacing the "?" characters to "-" for the needs of our assignment.
-
-`sed 's/?/-/g' joined_maize_genotypes.txt > Decreasing_SNP_position/decreasing_joined_maize.txt`
-
-
-
-`grep "unknown" joined_maize_genotyes.txt > unknown_maize.txt`
-
-`grep "multiple" joined_maize_genotypes.txt > multiple_maize.txt`
-
-Created two new files containing the unknown and multiple position data.
+`awk '$2 == 2' joined_maize.txt | sort -k3,3n > forward_maize_chr2.txt`
 
 
 
+`sort -k3,3nr maize_chr1.txt > reverse_maize_chr1.txt`
+
+Reverse sort ^
+
+This can be more efficient using piping:
+
+`awk '$2 == 2' joined_maize.txt | sort -k3,3nr > reverse_maize_chr2.txt`
 
 
 
+Now things are sorted, but now to deal with unknown and multiple position data:
+
+`awk '$2 == "unknown"' joined_maize.txt > unknown_maize.txt`
+
+Unknown positions taken care of ^
+
+ `awk '$2 =="multiple"' joined_maize.txt > multiple_maize.txt`
+
+Multiple positions taken care of ^
 
 
 
+Now just to change missing data in the reverse sorted files:
 
+`sed -i 's/?/-/g' reverse_maize_chr1.txt`
 
+This command will be distributed onto all the reverse chromosomes.
 
-
-
-
-
-
-``
-
-
-
-
+------
 
 ##Teosinte:
 
-The above commands were duplicated, but now for the teosinte information that we need to analyze.
+Everything from above will be duplicated but now for the teosinte data and information.
 
-`grep "SNP_ID" fang_et_al_genotypes.txt > teosinte_genotype.txt`
+grep "Group" fang_et_al_genotypes > maize_genotypes.txt`
 
-This command was used to remove the teosinte genotypes and save them separately.
-
-`grep "ZMP[JA,IL,BA]" fang_et_al_genotypes.txt >> teosinte_genotype.txt`
-
-This command was used to append the groups that we are looking for the the separate file, maize_genotypes.txt.
-
-`awk -f transpose.awk teosinte_genotype.txt > transposed_teosinte_genotypes.txt`
-
-Now, we transpose the maize_genotype.txt file and save as a new file named transposed_maize_genotypes.txt.
-
-Now to join the files:
-
-`join -1 1 -2 1 data_snp_position transposed_teosinte_genotypes.txt > joined_teosinte_genotypes.txt`
-
-Completed!
-
-Now, we move our joined files into their respective folders:
-
- `mv joined_teosinte_genotypes.txt teosinte`
-
-
-
-In this folder we will make 3 more directories for the information of Increasing and Decreasing SNP position and an extra directory for whatever else turns up.
-
-`mkdir Increasing_SNP_position` `mkdir Decreasing_SNP_position`  `mkdir extras`
-
-
-
-Copied our join_maize_genotypes.txt into the respective directions based on increasing and decreasing values, while replacing the "?" characters to "-" for the needs of our assignment.
-
-`sed 's/?/-/g' joined_teosinte_genotypes.txt > Decreasing_SNP_position/decreasing_joined.teosinte.txt`
-
-
-
-`grep "unknown" joined_teosinte_genotyes.txt > unknown_teosinte.txt`
-
-`grep "multiple" joined_teosinte_genotypes.txt > multiple_teosinte.txt`
-
-Created two new files containing the unknown and multiple position data.
-
-
-
-
-
-
-
-\###Maize Data
+Removal of the headers in the SNP file and sent to a new file titled maize_genotypes.txt.
 
 ```
-here is my snippet of code used for data processing
+grep "ZMP[JA,IL,BA]" fang_et_al_genotypes.txt >> teosinte_genotypes.txt
 ```
 
-Here is my brief description of what this code does
+Appendage of important header data to the teosinte_genotypes.txt file.
 
-```
-
-
-
-$ awk -f transpose.awk fang_et_al_genotypes.txt > transposed_genotypes.txt
-
-[mjkohane@hpc-class HW1_BCB546X]$ grep "Sample_ID" fang_et_al_genotypes.txt > fang_IDs.txt
-
-[mjkohane@hpc-class HW1_BCB546X]$ grep -v "Sample_ID" fang_et_al_genotypes.txt > fang_data.txt
 
 
 ```
-
-
-
-By inspecting this file I learned that:
-
-1. point 1
-2. point 2
-3. point 3
-
-or
-
-- point 1
-- point 2
-- point 3
-
-\###Attributes of `snp_position.txt`
-
-```
-here is my snippet of code used for data inspection
-
-[mjkohane@hpc-class HW1_BCB546X]$ grep "SNP_ID" snp_position.txt < snp_headers.txt
-
-[mjkohane@hpc-class HW1_BCB546X]$ grep -v "SNP_ID" snp_position.txt > snp_locations.txt
-
-[mjkohane@hpc-class HW1_BCB546X]$ sort -k1,1n snp_position.txt > sorted_snp.txt
-
+awk -f transpose.awk teosinte_genotypes.txt > transposed_teosinte.txt
 ```
 
-By inspecting this file I learned that:
+Now we transpose the teosinte_genotypes.txt file, this is not stored as transposed_teosinte.txt.
 
-1. point 1
-2. point 2
-3. point 3
-
-or
-
-- point 1
-- point 2
-- point 3
-
-##Data Processing
-
-\###Maize Data
+I used vi to change Sample_ID to SNP_ID so that the data can be correctly matched.
 
 ```
-here is my snippet of code used for data processing
+cut -f 1,3,4 snp_position.txt > teosinte_snp_position.txt
 ```
 
-Here is my brief description of what this code does
-
-\###Teosinte Data
+The command above was used to remove unimportant data, and save the important data into maize_position.txt
 
 ```
-here is my snippet of code used for data processing
+join -1 1 -2 1 teosinte_position.txt transposed_teosinte_genotypes.txt > joined_teosinte.txt
 ```
 
-Here is my brief description of what this code does
+Now we join the files and observe. 
+
+Everything is looking in order so far...
+
+
+
+Now to create files for individual chromosomes:
+
+`awk '$2 ==1' joined_teosinte.txt > teosinte_chr1.txt`
+
+This has created a file for the first chromosome of the teosinte data, now to filter it in increasing and decreasing order, and make 9 more!
+
+
+
+Sorting:
+
+```
+sort -k3,3n teosinte_chr1.txt > forward_teosinte_chr1.txt
+```
+
+Forward sort ^
+
+This can be more efficient using piping:
+
+`awk '$2 == 2' joined_toesinte.txt | sort -k3,3n > forward_teosinte_chr2.txt`
+
+
+
+`sort -k3,3nr teosinte_chr1.txt > reverse_teosinte_chr1.txt`
+
+Reverse sort ^
+
+This can be more efficient using piping:
+
+`awk '$2 == 2' joined_teosinte.txt | sort -k3,3nr > reverse_teosinte_chr2.txt`
+
+
+
+Now things are sorted, but now to deal with unknown and multiple position data:
+
+`awk '$2 == "unknown"' joined_teosinte.txt > unknown_teosinte.txt`
+
+Unknown positions taken care of ^
+
+ `awk '$2 =="multiple"' joined_teosinte.txt > multiple_teosinte.txt`
+
+Multiple positions taken care of ^
+
+
+
+Now just to change missing data in the reverse sorted files:
+
+`sed -i 's/?/-/g' reverse_teosinte_chr1.txt`
+
+This command will be distributed onto all the reverse chromosomes.
+
+From using less -S on the forward_teosinte_chr .txt files, I noticed there was far less data than there was for maize.  Maybe something went wrong in my commands or that is just the nature of the data.
+
